@@ -11,10 +11,11 @@ class VideoPlayer(QWidget):
         super(VideoPlayer, self).__init__(parent)
 
         self.mediaPlayer = QMediaPlayer(None, QMediaPlayer.VideoSurface)
+        
 
         btnSize = QSize(16, 16)
         videoWidget = QVideoWidget()
-
+        
         openButton = QPushButton("Open Video")   
         openButton.setToolTip("Open Video File")
         openButton.setStatusTip("Open Video File")
@@ -25,7 +26,7 @@ class VideoPlayer(QWidget):
         openButton.clicked.connect(self.abrir)
 
         self.playButton = QPushButton()
-        self.playButton.setEnabled(False)
+        self.playButton.setEnabled(True)
         self.playButton.setFixedHeight(24)
         self.playButton.setIconSize(btnSize)
         self.playButton.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
@@ -36,7 +37,7 @@ class VideoPlayer(QWidget):
         self.positionSlider.sliderMoved.connect(self.setPosition)
 
         self.statusBar = QStatusBar()
-        self.statusBar.setFont(QFont("Noto Sans", 7))
+        self.statusBar.setFont(QFont("Noto Sans", 8))
         self.statusBar.setFixedHeight(14)
 
         controlLayout = QHBoxLayout()
@@ -46,6 +47,7 @@ class VideoPlayer(QWidget):
         controlLayout.addWidget(self.positionSlider)
 
         layout = QVBoxLayout()
+        
         layout.addWidget(videoWidget)
         layout.addLayout(controlLayout)
         layout.addWidget(self.statusBar)
