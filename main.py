@@ -52,7 +52,7 @@ class Ui_MainWindow(object):
         self.progressBar.setGeometry(QtCore.QRect(20,395,772,31))
         self.progressBar.setMinimum(0)
         self.progressBar.setMaximum(100)
-       
+        self.progressBar.setValue(100)
         self.progressBar.setEnabled(True)
         
 
