@@ -14,21 +14,25 @@ from PySide6.QtCore import QThread
 from PySide6.QtCore import *
 from PySide6.QtWidgets import *
 from PySide6.QtGui import *
-from PyQt5.QtCore import QTimer
-from VideoPlayer import *
+from VideoPlayer import *   
 from QEditText import *
 from pytube import YouTube
 from pytube.exceptions import RegexMatchError
+import pytube.request
+from tqdm import tqdm
 from downloadThread import *
 import youtube_dl
 import os
 import time
+from ResolutionOption import ResolutionOption
 os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = ".\\platform\\"
 
+pytube.request.default_range_size = 1048576
 
-class Ui_MainWindow(object):
+class Ui_MainWindow(QWidget):
     update_progress = QtCore.pyqtSignal(int)
     update_status = QtCore.pyqtSignal(str)
+    file_size = 0
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -52,16 +56,18 @@ class Ui_MainWindow(object):
         self.progressBar.setGeometry(QtCore.QRect(20,395,772,31))
         self.progressBar.setMinimum(0)
         self.progressBar.setMaximum(100)
-        self.progressBar.setValue(100)
+        self.progressBar.setValue(0)
         self.progressBar.setEnabled(True)
-        
 
         self.comboBox = QtWidgets.QComboBox(self.centralwidget)
         self.comboBox.setGeometry(QtCore.QRect(520, 10, 151, 31))
         self.comboBox.setObjectName("comboBox")
 
-        self.videoPlayer = VideoPlayer(self.centralwidget)
-        self.videoPlayer.setGeometry(QtCore.QRect(10, 60, 772, 340))
+        self.resolution_option = ResolutionOption(self.centralwidget)
+        self.resolution_option.setGeometry(QtCore.QRect(10, 60, 772, 340))
+
+        # self.videoPlayer = VideoPlayer(self.centralwidget)
+        # self.videoPlayer.setGeometry(QtCore.QRect(10, 60, 772, 340))
         
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
@@ -71,10 +77,6 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         self.setPlaceHolder()
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
-
-
-
-    
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -86,7 +88,7 @@ class Ui_MainWindow(object):
 
         comboBoxList = ["Youtube", "Facebook"]       
         self.comboBox.addItems(comboBoxList)
-        self.comboBox.setEditable(True)
+        self.comboBox.setEditable(False)
         #icon youtube
         iconytb = QtGui.QIcon('.\\icon\\youtube.png')
         self.comboBox.setItemIcon(0,iconytb)
@@ -95,7 +97,7 @@ class Ui_MainWindow(object):
         self.comboBox.setItemIcon(1,iconfb)
 
 
-        self.thread = DownloadThread(self.download_from_youtube)
+        # self.thread = DownloadThread(self.download_from_youtube)
 
     def setPlaceHolder(self):
         if (self.linkEditTxt.toPlainText() == ""):
@@ -104,48 +106,62 @@ class Ui_MainWindow(object):
     
     
     
-# #cái gốc
+# # #cái gốc
+#     def download_from_youtube(self, link):
+#         link = self.linkEditTxt.toPlainText()
+#         print("Download link: " + link) # Print the link to see if it's correct
+#         try:
+#             youtubeObj = YouTube(link)
+#         except RegexMatchError:
+#         # Handle the error here
+#             print("Invalid YouTube link")
+#             return
+
+#         youtubeObj = youtubeObj.streams.get_highest_resolution()
+#     # Start the download
+#         try:
+#            # Estimate the total duration based on the file size
+#             total_duration = youtubeObj.filesize / 1000000 # in MB
+
+#         # Start the download
+#             start_time = time.time()
+#             youtubeObj.download()
+#             end_time = time.time()
+
+#         # Emit the progress through the signal
+#             elapsed_duration = end_time - start_time
+#             elapsed_percent = elapsed_duration / total_duration * 100
+#             self.progress_updated.emit(elapsed_percent)
+#             for i in range(0, total_duration):
+#                 self.progressBar.setValue(i+1)
+
+#         except Exception as e:
+#             print("Error downloading: " + str(e))
+#         return
+
     def download_from_youtube(self, link):
-        link = self.linkEditTxt.toPlainText()
-        print("Download link: " + link) # Print the link to see if it's correct
+        print(f'Downloading link: {link}')
         try:
-            youtubeObj = YouTube(link)
+            youtubeObj = YouTube(link,on_progress_callback=self.on_download_progress)
+            self.resolution_option.setup(youtubeObj)
         except RegexMatchError:
         # Handle the error here
             print("Invalid YouTube link")
             return
 
-        youtubeObj = youtubeObj.streams.get_highest_resolution()
-    # Start the download
-        try:
-           # Estimate the total duration based on the file size
-            total_duration = youtubeObj.filesize / 1000000 # in MB
+        stream = youtubeObj.streams.get_highest_resolution()
+        # stream.download()
 
-        # Start the download
-            start_time = time.time()
-            youtubeObj.download()
-            end_time = time.time()
-
-        # Emit the progress through the signal
-            elapsed_duration = end_time - start_time
-            elapsed_percent = elapsed_duration / total_duration * 100
-            self.progress_updated.emit(elapsed_percent)
-            for i in range(0, total_duration):
-                self.progressBar.setValue(i+1)
-
-        except Exception as e:
-            print("Error downloading: " + str(e))
-        return
-
-
-        
-
-  
+    def on_download_progress(self, stream, chunk, bytes_remaining):
+        file_size = stream.filesize
+        bytes_received = file_size - bytes_remaining
+        percentage = int((bytes_received/file_size)*100)
+        self.progressBar.setValue(percentage)
     
     def downloadfromFacebook(self,link):
         print(link) # Print the link to see if it's correct
         try:
-           with youtube_dl.YoutubeDL({'outtmpl': '%(title)s.%(ext)s'}) as ydl:                
+            with youtube_dl.YoutubeDL({'outtmpl': '%(title)s.%(ext)s'}) as ydl:                
                 def progress_hook(progress):
                     if progress['status'] == 'downloading':
                     # Get the total file size in bytes
@@ -159,29 +175,24 @@ class Ui_MainWindow(object):
                         self.progressBar.update()
 
                 ydl.params['progress_hooks'] = [progress_hook]
+                # ydl.params['progress_hooks'] = [self.my_hook]
                 ydl.download([link])
         except Exception as e:
             print("Error downloading" + str(e)) 
             return
-        
-
-    
 
     def choise(self):
         link = self.linkEditTxt.toPlainText()
         if self.comboBox.currentText() == "Facebook":
             self.thread = DownloadThread(self.downloadfromFacebook, link)
         elif self.comboBox.currentText() == "Youtube":
-            self.thread = DownloadThread(self.download_from_youtube,link)
+            self.download_from_youtube(link)
+            # self.thread = DownloadThread(self.download_from_youtube,link)
+            # self.downloader.download_video(link,'D:\Workspace\Python\MediaDownloader')
         
-        self.thread.progress_updated.connect(self.progressBar.setValue)
+        # self.thread.progress_updated.connect(self.progressBar.setValue)
         
-        self.thread.start()
-
-
-
-
-
+        # self.thread.start()
 
 if __name__ == "__main__":
     import sys
