@@ -5,8 +5,10 @@ from PySide6.QtGui import *
 
 class ResolutionOption(QWidget):
     def __init__(self, parent=None):
-        super(ResolutionOption, self).__init__(parent)
-        self.centralwidget = QtWidgets.QWidget(self.parent)
+        super().__init__(parent=parent)
+
+        # rest of the code here
+        self.centralwidget = QtWidgets.QWidget(parent)
         self.centralwidget.setObjectName("centralwidget")
         layout = QHBoxLayout()
         layout.addWidget(self.centralwidget)

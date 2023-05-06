@@ -23,7 +23,7 @@ from tqdm import tqdm
 from downloadThread import *
 import youtube_dl
 import os
-import time
+
 from ResolutionOption import ResolutionOption
 os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = ".\\platform\\"
 
@@ -63,8 +63,8 @@ class Ui_MainWindow(QWidget):
         self.comboBox.setGeometry(QtCore.QRect(520, 10, 151, 31))
         self.comboBox.setObjectName("comboBox")
 
-        self.resolution_option = ResolutionOption(self.centralwidget)
-        self.resolution_option.setGeometry(QtCore.QRect(10, 60, 772, 340))
+        # self.resolution_option = ResolutionOption(self.centralwidget)
+        # self.resolution_option.setGeometry(QtCore.QRect(10, 60, 772, 340))
 
         # self.videoPlayer = VideoPlayer(self.centralwidget)
         # self.videoPlayer.setGeometry(QtCore.QRect(10, 60, 772, 340))
@@ -77,6 +77,11 @@ class Ui_MainWindow(QWidget):
         self.retranslateUi(MainWindow)
         self.setPlaceHolder()
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        
+
+        # self.resolution_option = ResolutionOption(parent=None)
+
+
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -143,7 +148,7 @@ class Ui_MainWindow(QWidget):
         print(f'Downloading link: {link}')
         try:
             youtubeObj = YouTube(link,on_progress_callback=self.on_download_progress)
-            self.resolution_option.setup(youtubeObj)
+            # self.resolution_option.setup(youtubeObj)
         except RegexMatchError:
         # Handle the error here
             print("Invalid YouTube link")
