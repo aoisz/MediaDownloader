@@ -23,7 +23,7 @@ class VideoPlayer(QWidget):
         openButton.setIconSize(btnSize)
         openButton.setFont(QFont("Noto Sans", 8))
         openButton.setIcon(QIcon.fromTheme("document-open", QIcon(".\\icon\\open.png")))
-        openButton.clicked.connect(self.abrir)
+        openButton.clicked.connect(self.abrir1)
 
         self.playButton = QPushButton()
         self.playButton.setEnabled(True)
@@ -61,7 +61,18 @@ class VideoPlayer(QWidget):
         self.mediaPlayer.error.connect(self.handleError)
         self.statusBar.showMessage("Ready")
 
-    def abrir(self):
+    def abrir(self,fileName):
+        # fileName, _ = QFileDialog.getOpenFileName(self, "Select a media",
+        #         ".", "Video Files (*.mp4 *.flv *.ts *.mts *.avi)")
+
+        if fileName != '':
+            self.mediaPlayer.setMedia(
+                    QMediaContent(QUrl.fromLocalFile(fileName)))
+            self.playButton.setEnabled(True)
+            self.statusBar.showMessage(fileName)
+            self.play()
+
+    def abrir1(self,fileName):
         fileName, _ = QFileDialog.getOpenFileName(self, "Select a media",
                 ".", "Video Files (*.mp4 *.flv *.ts *.mts *.avi)")
 

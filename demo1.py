@@ -1,81 +1,70 @@
-from tkinter import *
-from tkinter import ttk
 import tkinter as tk
-import time
-from pytube import *
-from pytube.exceptions import RegexMatchError
-import os
-import youtube_dl
-from tqdm import *
-import pytube.request
+from PIL import Image, ImageTk
+import cv2
 
-class App(tk.Tk):
-    def __init__(self):
-        super().__init__()
+class VideoPlayer:
+    def __init__(self, master):
+        self.master = master
+        self.cap = cv2.VideoCapture('video.mp4')
+        self.create_widgets()
+        
+    def create_widgets(self):
+        # Create the video frame
+        self.video_frame = tk.Frame(self.master)
+        self.video_frame.pack(side=tk.TOP, padx=10, pady=10)
+        
+        # Set up the video player window
+        ret, frame = self.cap.read()
+        self.photo = ImageTk.PhotoImage(image=Image.fromarray(frame))
+        self.label = tk.Label(self.video_frame, image=self.photo)
+        self.label.pack()
+        
+        # Create the play/pause button
+        self.play_button = tk.Button(self.master, text="Play", command=self.toggle_play)
+        self.play_button.pack(side=tk.LEFT, padx=10, pady=10)
+        
+        # Create the volume up/down buttons
+        self.volume_up_button = tk.Button(self.master, text="Volume Up", command=self.volume_up)
+        self.volume_up_button.pack(side=tk.LEFT, padx=10, pady=10)
+        self.volume_down_button = tk.Button(self.master, text="Volume Down", command=self.volume_down)
+        self.volume_down_button.pack(side=tk.LEFT, padx=10, pady=10)
+        
+    def toggle_play(self):
+        if self.cap.isOpened():
+            if self.play_button.config('text')[-1] == 'Play':
+                self.play_button.config(text="Pause")
+                self.play()
+            else:
+                self.play_button.config(text="Play")
+                self.pause()
+                
+    def play(self):
+        self.paused = False
+        while not self.paused:
+            ret, frame = self.cap.read()
+            if not ret:
+                self.pause()
+                break
+            self.photo = ImageTk.PhotoImage(image=Image.fromarray(frame))
+            self.label.config(image=self.photo)
+            self.label.image = self.photo
+            self.master.update()
+            
+    def pause(self):
+        self.paused = True
+        
+    def volume_up(self):
+        pass # Implement volume control here
+        
+    def volume_down(self):
+        pass # Implement volume control here
+        
+# Create the tkinter window
+root = tk.Tk()
+root.title("Video Player")
 
-        self.geometry("792x450")
-        self.title('Download Media Manager')
-        self.iconbitmap('Icon/downloadicon.ico')
+# Create the video player object
+player = VideoPlayer(root)
 
-        # Variables
-        self.link = tk.StringVar()
-        self.placeholder = tk.StringVar()
-        self.placeholder.set('Paste link here')
-        self.progress = 0
-        self.max_progress = 100
-
-        # Widgets
-        download_label = tk.Label(self, text="Paste your link to download here:", font=("Arial", 11))
-        download_label.place(x=10, y=10)
-
-        combobox_selector = ttk.Combobox(self, values=["YouTube", "Facebook"], state="readonly", width=20, font=("Arial", 12))
-        combobox_selector.place(x=300, y=10)
-        combobox_selector.current(0)  # set default value to "YouTube"
-
-        self.edit_link = tk.Entry(self, width=40, fg='grey', textvariable=self.placeholder)
-        self.edit_link.place(x=20, y=40)
-        self.edit_link.bind('<FocusIn>', self.on_entry_click)
-        self.edit_link.bind('<FocusOut>', self.on_focusout)
-
-        #download_btn = tk.Button(self, text="Download", width=10, height=1, font=("Arial", 10), state="normal", command=self.download)
-        #download_btn.place(x=540, y=10)
-
-        self.pb = ttk.Progressbar(self, orient='horizontal', mode='determinate', length=500, maximum=self.max_progress, value=self.progress)
-        self.pb.place(x=20, y=80)
-
-    def on_entry_click(self, event):
-        """Clears the placeholder text when user clicks on Entry"""
-        if self.edit_link.get() == self.placeholder.get():
-            self.edit_link.delete(0, "end")
-            self.edit_link.config(fg='black')
-
-    def on_focusout(self, event):
-        """Displays the placeholder text if Entry is empty"""
-        if self.edit_link.get() == '':
-            self.edit_link.insert(0, self.placeholder.get())
-            self.edit_link.config(fg='grey')
-
-    # def download(self):
-    #     """Downloads the video using the provided link"""
-    #     link = self.edit_link.get()
-    #     if link:
-    #         try:
-    #             yt = YouTube(link)
-    #             video = yt.streams.first()
-    #             title = video.title
-    #             filename = title + '.mp4'
-    #             video.download(filename)
-
-    #             self.pb['value'] = self.max_progress
-    #             messagebox.showinfo("Download Complete", "Video downloaded successfully!")
-
-    #         except (RegexMatchError, VideoUnavailable, KeyError):
-    #             messagebox.showerror("Invalid Link", "Please enter a valid YouTube link.")
-
-    #     else:
-    #         messagebox.showerror("Invalid Link", "Please enter a valid YouTube link.")
-
-
-if __name__ == '__main__':
-    app = App()
-    app.mainloop()
+# Run the tkinter event loop
+root.mainloop()

@@ -66,8 +66,8 @@ class Ui_MainWindow(QWidget):
         # self.resolution_option = ResolutionOption(self.centralwidget)
         # self.resolution_option.setGeometry(QtCore.QRect(10, 60, 772, 340))
 
-        # self.videoPlayer = VideoPlayer(self.centralwidget)
-        # self.videoPlayer.setGeometry(QtCore.QRect(10, 60, 772, 340))
+        self.videoPlayer = VideoPlayer(self.centralwidget)
+        self.videoPlayer.setGeometry(QtCore.QRect(10, 60, 772, 340))
         
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
